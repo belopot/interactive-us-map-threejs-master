@@ -5,9 +5,9 @@ function MapNetwork() {
 	this.initialized = false;
 
 	this.settings = {
-		verticesSkipStep: 2,
-		maxLineDist: 15,
-		maxConnectinosPerPoint: 10,
+		verticesSkipStep: 1,
+		maxLineDist: 3,
+		maxConnectinosPerPoint: 6,
 	};
 
 	this.meshComponents = new THREE.Object3D();
@@ -45,10 +45,10 @@ function MapNetwork() {
 	};
 
 	// mappoint
-	this.mapPointSizeMultiplier = 0.4;
+	this.mapPointSizeMultiplier = 0.1;
 	this.spriteTextureMapPoint = TEXTURES.circle;
 	this.mapPointColor = '#ffffff';
-	this.mapPointOpacity = 0.5;
+	this.mapPointOpacity = 0.2;
 	this.mapPointGeom = new THREE.Geometry();
 
 	this.mapPointUniforms = {
