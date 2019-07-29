@@ -19,7 +19,7 @@ var sceneSettings = {
 
 	pause: false,
 	bgColor: 0x111111,
-	enableGridHelper: false,
+	enableGridHelper: true,
 	enableAxisHelper: false
 
 };
@@ -61,7 +61,7 @@ cameraCtrl.enableRotate = false;
 
 
 // ---- grid & axis helper
-var gridHelper = new THREE.GridHelper(100, 5);
+var gridHelper = new THREE.GridHelper(131.5, 5);
 gridHelper.setColors(0x00bbff, 0xffffff);
 gridHelper.material.opacity = 0.05;
 gridHelper.material.transparent = true;

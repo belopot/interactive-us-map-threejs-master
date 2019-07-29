@@ -5,7 +5,7 @@ function MapNetwork() {
 	this.initialized = false;
 
 	this.settings = {
-		verticesSkipStep: 1,
+		verticesSkipStep: 2,
 		maxLineDist: 3,
 		maxConnectinosPerPoint: 6,
 	};
@@ -15,7 +15,8 @@ function MapNetwork() {
 	// NN component containers
 	this.components = {
 		mapPoints: [],
-		mapLines: []
+		mapLines: [],
+		traffics: []
 	};
 
 	// map line
@@ -89,6 +90,50 @@ function MapNetwork() {
 
 	});
 
+
+	// traffic
+	this.trafficGeom = new THREE.Geometry();
+
+	this.trafficUniforms = {
+		sizeMultiplier: {
+			type: 'f',
+			value: 3
+		},
+		opacity: {
+			type: 'f',
+			value: 0.8
+		},
+		texture: {
+			type: 't',
+			value: TEXTURES.circle
+		}
+	};
+
+	this.trafficAttributes = {
+		color: {
+			type: 'c',
+			value: []
+		},
+		size: {
+			type: 'f',
+			value: []
+		}
+	};
+
+	this.trafficShaderMaterial = new THREE.ShaderMaterial({
+
+		uniforms: this.trafficUniforms,
+		attributes: this.trafficAttributes,
+		vertexShader: null,
+		fragmentShader: null,
+		blending: currentBlendingMode,
+		transparent: true,
+		depthTest: false
+
+	});
+
+
+
 	// initialize NN
 	this.initNeuralNetwork();
 
@@ -98,12 +143,16 @@ MapNetwork.prototype.initNeuralNetwork = function () {
 
 	this.initMapPoints(OBJ_MODELS.usmap.geometry.vertices);
 	this.initMapLines();
+	this.initTraffic();
 
 	this.mapPointShaderMaterial.vertexShader = SHADER_CONTAINER.mappointVert;
 	this.mapPointShaderMaterial.fragmentShader = SHADER_CONTAINER.mappointFrag;
 
 	this.mapLineShaderMaterial.vertexShader = SHADER_CONTAINER.maplineVert;
 	this.mapLineShaderMaterial.fragmentShader = SHADER_CONTAINER.maplineFrag;
+
+	this.trafficShaderMaterial.vertexShader = SHADER_CONTAINER.mappointVert;
+	this.trafficShaderMaterial.fragmentShader = SHADER_CONTAINER.mappointFrag;
 
 	this.initialized = true;
 
@@ -181,15 +230,55 @@ MapNetwork.prototype.initMapLines = function () {
 
 	this.mapLineMesh = new THREE.Line(this.mapLineGeom, this.mapLineShaderMaterial, THREE.LinePieces);
 	this.meshComponents.add(this.mapLineMesh);
-	
+
 };
 
+MapNetwork.prototype.initTraffic = function () {
+
+	this.trafficLabels = [];
+	this.trafficLabelRoot = new THREE.Object3D();
+	this.meshComponents.add(this.trafficLabelRoot);
+
+	for (var i = 0; i < TrafficData.length; i++) {
+		var posx = TrafficData[i].position.x - 131.5;
+		var posy = TrafficData[i].height;
+		var posz = TrafficData[i].position.y - 70;
+		var n = new Traffic(posx, posy, posz, TrafficData[i].size, TrafficData[i].color, TrafficData[i].label);
+		this.components.traffics.push(n);
+		this.trafficGeom.vertices.push(n);
+
+		//Comment
+		var comp = new THREE.Object3D();
+		comp.position.set(posx, posy, posz);
+		this.trafficLabelRoot.add(comp);
+		var label = new CommentLabel(TrafficData[i].label, comp);
+		this.trafficLabels.push(label);
+	}
+
+
+	// set mappoint attributes value
+	for (var i = 0; i < this.components.traffics.length; i++) {
+		this.trafficAttributes.color.value[i] = new THREE.Color(TrafficData[i].color); // initial mappoint color
+		this.trafficAttributes.size.value[i] = TrafficData[i].size; // initial mappoint size
+	}
+
+
+	// mappoint mesh
+	this.trafficParticles = new THREE.PointCloud(this.trafficGeom, this.trafficShaderMaterial);
+	this.meshComponents.add(this.trafficParticles);
+
+	this.trafficShaderMaterial.needsUpdate = true;
+
+};
 
 MapNetwork.prototype.update = function (deltaTime) {
 
 	if (!this.initialized) return;
 
-
+	// update position of traffic labels
+	for (var ii = 0; ii < this.trafficLabels.length; ii++) {
+		this.trafficLabels[ii].updatePosition();
+	}
 };
 
 MapNetwork.prototype.constructMapLineArrayBuffer = function (mapLine) {
@@ -214,5 +303,5 @@ MapNetwork.prototype.constructMapLineArrayBuffer = function (mapLine) {
 };
 
 MapNetwork.prototype.releaseSignalAt = function () {
-	
+
 };

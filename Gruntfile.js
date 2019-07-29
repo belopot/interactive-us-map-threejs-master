@@ -17,7 +17,7 @@ module.exports = function ( grunt ) {
 				// footer: ''
 			},
 			build: {
-				src: [ 'js/mappoint.js', 'js/mapline.js', 'js/mapnet.js',
+				src: [ 'js/mappoint.js', 'js/traffic.js', 'js/comment.js', 'js/mapline.js', 'js/mapnet.js',
 						 'js/loaders.js', 'js/scene.js', 'js/main.js', 'js/run.js', 'js/events.js', 'js/dataSetAPI.js' ],
 
 				dest: 'js/build/app.js'

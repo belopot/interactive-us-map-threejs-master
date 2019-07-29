@@ -4,7 +4,6 @@ function MapPoint( idx, x, y, z ) {
 	this.idx = idx;
 	this.connection = [];
 	this.fired = false;
-	this.prevReleaseAxon = null;
 	this.color = "#ffffff";
 	THREE.Vector3.call( this, x, y, z );
 }
