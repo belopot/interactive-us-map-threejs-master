@@ -132,6 +132,10 @@ function MapNetwork() {
 
 	});
 
+	// firework
+	this.fireworks = [];
+
+
 
 
 	// initialize NN
@@ -144,6 +148,7 @@ MapNetwork.prototype.initNeuralNetwork = function () {
 	this.initMapPoints(OBJ_MODELS.usmap.geometry.vertices);
 	this.initMapLines();
 	this.initTraffic();
+	this.initFirework();
 
 	this.mapPointShaderMaterial.vertexShader = SHADER_CONTAINER.mappointVert;
 	this.mapPointShaderMaterial.fragmentShader = SHADER_CONTAINER.mappointFrag;
@@ -271,6 +276,22 @@ MapNetwork.prototype.initTraffic = function () {
 
 };
 
+MapNetwork.prototype.initFirework = function () {
+	this.fireworkRoot = new THREE.Object3D();
+	this.meshComponents.add(this.fireworkRoot);
+
+	for (var i = 0; i < FireworkData.length; i++) {
+		var posx = FireworkData[i].position.x - 131.5;
+		var posy = FireworkData[i].height;
+		var posz = FireworkData[i].position.y - 70;
+		var pos = new THREE.Vector3(posx, posy, posz);
+
+		var fw = new Firework(this.fireworkRoot, pos, FireworkData[i].size, FireworkData[i].color, FireworkData[i].duration, FireworkData[i].label);
+		this.fireworks.push(fw);
+
+	}
+}
+
 MapNetwork.prototype.update = function (deltaTime) {
 
 	if (!this.initialized) return;
@@ -278,6 +299,11 @@ MapNetwork.prototype.update = function (deltaTime) {
 	// update position of traffic labels
 	for (var ii = 0; ii < this.trafficLabels.length; ii++) {
 		this.trafficLabels[ii].updatePosition();
+	}
+
+	// update fireworks 
+	for (var i = 0; i < this.fireworks.length; i++) {
+		this.fireworks[i].update(deltaTime);
 	}
 };
 

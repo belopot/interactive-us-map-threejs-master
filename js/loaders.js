@@ -44,6 +44,9 @@ shaderLoader.loadMultiple( SHADER_CONTAINER, {
 	maplineVert: 'shaders/mapline.vert',
 	maplineFrag: 'shaders/mapline.frag',
 
+	fireworkVert: 'shaders/firework.vert',
+	fireworkFrag: 'shaders/firework.frag',
+
 } );
 
 
@@ -62,11 +65,23 @@ var textureLoader = new THREE.TextureLoader( loadingManager );
 textureLoader.load( 'sprites/circle.png', function ( tex ) {
 
 	TEXTURES.circle = tex;
-
+	
 } );
 
 textureLoader.load( 'sprites/mark.png', function ( tex ) {
 
 	TEXTURES.mark = tex;
+
+} );
+
+textureLoader.load( 'sprites/spark4.png', function ( tex ) {
+
+	TEXTURES.spark4 = tex;
+
+} );
+
+textureLoader.load( 'sprites/spark5.png', function ( tex ) {
+
+	TEXTURES.spark5 = tex;
 
 } );

@@ -4,7 +4,6 @@ function MapPoint( idx, x, y, z ) {
 	this.idx = idx;
 	this.connection = [];
 	this.fired = false;
-	this.prevReleaseAxon = null;
 	this.color = "#ffffff";
 	THREE.Vector3.call( this, x, y, z );
 }
@@ -34,6 +33,241 @@ MapPoint.prototype.reset = function () {
 	this.fired = false;
 };
 
+// Traffic ----------------------------------------------------------------
+
+function Traffic( x, y, z, size, color, label) {
+	this.size = size;
+	this.color = color;
+	this.label = label;
+	THREE.Vector3.call( this, x, y, z );
+}
+
+Traffic.prototype = Object.create( THREE.Vector3.prototype );
+
+
+// Firework object
+// constructor 
+function Firework(parentObj, pos, size, color, duration, label) {
+    this.parentObj = parentObj;
+    this.dest = [];
+    this.geometry = null;
+    this.points = null;
+
+    this.uniforms = {
+        sizeMultiplier: {
+            type: 'f',
+            value: 5
+        },
+        opacity: {
+            type: 'f',
+            value: 1
+        },
+        texture: {
+            type: 't',
+            value: TEXTURES.spark5
+        }
+    };
+
+    this.attributes = {
+        color: {
+            type: 'c',
+            value: []
+        },
+        size: {
+            type: 'f',
+            value: []
+        }
+    };
+
+    this.material = new THREE.ShaderMaterial({
+
+        uniforms: this.uniforms,
+        attributes: this.attributes,
+        vertexShader: SHADER_CONTAINER.fireworkVert,
+        fragmentShader: SHADER_CONTAINER.fireworkFrag,
+        blending: currentBlendingMode,
+        transparent: true,
+        depthTest: false
+
+    });
+
+
+    this.uniformsChild = {
+        sizeMultiplier: {
+            type: 'f',
+            value: 3
+        },
+        opacity: {
+            type: 'f',
+            value: 0.8
+        },
+        texture: {
+            type: 't',
+            value: TEXTURES.spark5
+        }
+    };
+
+    this.attributesChild = {
+        color: {
+            type: 'c',
+            value: []
+        },
+        size: {
+            type: 'f',
+            value: []
+        }
+    };
+
+    this.materialChild = new THREE.ShaderMaterial({
+
+        uniforms: this.uniformsChild,
+        attributes: this.attributesChild,
+        vertexShader: SHADER_CONTAINER.fireworkVert,
+        fragmentShader: SHADER_CONTAINER.fireworkFrag,
+        blending: currentBlendingMode,
+        transparent: true,
+        depthTest: false
+
+    });
+
+
+    this.duration = duration;
+    this.timer = 0;
+    this.position = pos;
+    this.fireHeight = 20;
+    this.fireRadius = 5;
+    this.size = size;
+    this.color = new THREE.Color(color);;
+    this.launch();
+};
+Firework.prototype.reset = function () {
+    this.parentObj.remove(this.points);
+    this.dest = [];
+    this.geometry = null;
+    this.points = null;
+    this.material.opacity = 1;
+    this.material.colorsNeedUpdate = true;
+}
+Firework.prototype.launch = function () {
+    var from = new THREE.Vector3(this.position.x, this.position.y, this.position.z);
+    var to = new THREE.Vector3(this.position.x, this.position.y + this.fireHeight, this.position.z);
+
+    // set mappoint attributes value
+    this.attributes.color.value = [];
+    this.attributes.size.value = [];
+    this.attributes.color.value[0] = this.color;
+    this.attributes.size.value[0] = this.size * 3;
+
+    this.geometry = new THREE.Geometry();
+    this.points = new THREE.PointCloud(this.geometry, this.material);
+
+    this.geometry.vertices.push(from);
+    this.dest.push(to);
+    this.parentObj.add(this.points);
+}
+Firework.prototype.explode = function (vector) {
+    this.parentObj.remove(this.points);
+    this.dest = [];
+
+    this.geometry = new THREE.Geometry();
+
+    for (var i = 0; i < 20; i++) {
+
+
+        var from = new THREE.Vector3(
+            vector.x,
+            vector.y,
+            vector.z
+        );
+        var to = new THREE.Vector3(
+            THREE.Math.randFloat(vector.x - this.fireRadius, vector.x + this.fireRadius),
+            THREE.Math.randFloat(vector.y - this.fireRadius, vector.y + this.fireRadius),
+            THREE.Math.randFloat(vector.z - this.fireRadius, vector.z + this.fireRadius)
+        );
+        this.geometry.vertices.push(from);
+        this.dest.push(to);
+    }
+
+    for (var i = 0; i < this.geometry.vertices.length; i++) {
+        this.attributesChild.color.value[i] = this.color;
+        this.attributesChild.size.value[i] = this.size * 2;
+    }
+
+    this.points = new THREE.PointCloud(this.geometry, this.materialChild);
+    this.parentObj.add(this.points);
+}
+Firework.prototype.update = function (deltaTime) {
+    this.timer += deltaTime;
+    if (this.timer > this.duration) {
+        this.reset();
+        this.launch();
+        this.timer = 0;
+    }
+    // only if objects exist
+    if (this.points && this.geometry) {
+        var total = this.geometry.vertices.length;
+
+        // lerp particle positions 
+        for (var i = 0; i < total; i++) {
+            this.geometry.vertices[i].x += (this.dest[i].x - this.geometry.vertices[i].x) / 60;
+            this.geometry.vertices[i].y += (this.dest[i].y - this.geometry.vertices[i].y) / 60;
+            this.geometry.vertices[i].z += (this.dest[i].z - this.geometry.vertices[i].z) / 60;
+            this.geometry.verticesNeedUpdate = true;
+        }
+        // watch first particle for explosion 
+        if (total === 1) {
+            if (Math.ceil(this.geometry.vertices[0].y) > this.dest[0].y - 2) {
+                this.explode(this.geometry.vertices[0]);
+                return;
+            }
+        }
+        // fade out exploded particles 
+        if (total > 1) {
+            this.material.opacity -= 0.015;
+            this.material.colorsNeedUpdate = true;
+        }
+    }
+}
+function CommentLabel(label, targetObj) {
+  this.div = document.createElement('div');
+  this.div.style.position = 'absolute';
+  this.div.innerHTML = label;
+  this.div.style.top = -1000;
+  this.div.style.left = -1000;
+  this.div.style.color = '#ffffff';
+  this.div.style.fontSize = '16px';
+  this.div.classList.add('comment-label');
+  this.parent = targetObj;
+  this.position = new THREE.Vector3(0, 0, 0);
+  container.appendChild(this.div);
+
+}
+
+CommentLabel.prototype.setHTML = function (html) {
+  this.div.innerHTML = html;
+}
+
+CommentLabel.prototype.setParent = function (threejsobj) {
+  this.parent = threejsobj;
+}
+
+CommentLabel.prototype.updatePosition = function () {
+  if (this.parent) {
+    var pos = new THREE.Vector3(this.parent.position.x, this.parent.position.y, this.parent.position.z);
+    this.position.copy(pos);
+  }
+
+  var coords2d = this.get2DCoords();
+  this.div.style.left = coords2d.x - this.div.offsetWidth / 2 + 'px';
+  this.div.style.top = coords2d.y - this.div.offsetHeight - 5 + 'px';
+}
+
+CommentLabel.prototype.get2DCoords = function () {
+  var vector = this.position.project(camera);
+  vector.x = (vector.x + 1) / 2 * window.innerWidth;
+  vector.y = -(vector.y - 1) / 2 * window.innerHeight;
+  return vector;
+}
 // MapLine extends THREE.CubicBezierCurve3 ------------------------------------------------------------------
 /* exported MapLine, Connection */
 
@@ -84,8 +318,8 @@ function MapNetwork() {
 
 	this.settings = {
 		verticesSkipStep: 2,
-		maxLineDist: 15,
-		maxConnectinosPerPoint: 10,
+		maxLineDist: 3,
+		maxConnectinosPerPoint: 6,
 	};
 
 	this.meshComponents = new THREE.Object3D();
@@ -93,7 +327,8 @@ function MapNetwork() {
 	// NN component containers
 	this.components = {
 		mapPoints: [],
-		mapLines: []
+		mapLines: [],
+		traffics: []
 	};
 
 	// map line
@@ -123,10 +358,10 @@ function MapNetwork() {
 	};
 
 	// mappoint
-	this.mapPointSizeMultiplier = 0.4;
+	this.mapPointSizeMultiplier = 0.1;
 	this.spriteTextureMapPoint = TEXTURES.circle;
 	this.mapPointColor = '#ffffff';
-	this.mapPointOpacity = 0.5;
+	this.mapPointOpacity = 0.2;
 	this.mapPointGeom = new THREE.Geometry();
 
 	this.mapPointUniforms = {
@@ -167,6 +402,54 @@ function MapNetwork() {
 
 	});
 
+
+	// traffic
+	this.trafficGeom = new THREE.Geometry();
+
+	this.trafficUniforms = {
+		sizeMultiplier: {
+			type: 'f',
+			value: 3
+		},
+		opacity: {
+			type: 'f',
+			value: 0.8
+		},
+		texture: {
+			type: 't',
+			value: TEXTURES.circle
+		}
+	};
+
+	this.trafficAttributes = {
+		color: {
+			type: 'c',
+			value: []
+		},
+		size: {
+			type: 'f',
+			value: []
+		}
+	};
+
+	this.trafficShaderMaterial = new THREE.ShaderMaterial({
+
+		uniforms: this.trafficUniforms,
+		attributes: this.trafficAttributes,
+		vertexShader: null,
+		fragmentShader: null,
+		blending: currentBlendingMode,
+		transparent: true,
+		depthTest: false
+
+	});
+
+	// firework
+	this.fireworks = [];
+
+
+
+
 	// initialize NN
 	this.initNeuralNetwork();
 
@@ -176,12 +459,17 @@ MapNetwork.prototype.initNeuralNetwork = function () {
 
 	this.initMapPoints(OBJ_MODELS.usmap.geometry.vertices);
 	this.initMapLines();
+	this.initTraffic();
+	this.initFirework();
 
 	this.mapPointShaderMaterial.vertexShader = SHADER_CONTAINER.mappointVert;
 	this.mapPointShaderMaterial.fragmentShader = SHADER_CONTAINER.mappointFrag;
 
 	this.mapLineShaderMaterial.vertexShader = SHADER_CONTAINER.maplineVert;
 	this.mapLineShaderMaterial.fragmentShader = SHADER_CONTAINER.maplineFrag;
+
+	this.trafficShaderMaterial.vertexShader = SHADER_CONTAINER.mappointVert;
+	this.trafficShaderMaterial.fragmentShader = SHADER_CONTAINER.mappointFrag;
 
 	this.initialized = true;
 
@@ -259,15 +547,76 @@ MapNetwork.prototype.initMapLines = function () {
 
 	this.mapLineMesh = new THREE.Line(this.mapLineGeom, this.mapLineShaderMaterial, THREE.LinePieces);
 	this.meshComponents.add(this.mapLineMesh);
-	
+
 };
 
+MapNetwork.prototype.initTraffic = function () {
+
+	this.trafficLabels = [];
+	this.trafficLabelRoot = new THREE.Object3D();
+	this.meshComponents.add(this.trafficLabelRoot);
+
+	for (var i = 0; i < TrafficData.length; i++) {
+		var posx = TrafficData[i].position.x - 131.5;
+		var posy = TrafficData[i].height;
+		var posz = TrafficData[i].position.y - 70;
+		var n = new Traffic(posx, posy, posz, TrafficData[i].size, TrafficData[i].color, TrafficData[i].label);
+		this.components.traffics.push(n);
+		this.trafficGeom.vertices.push(n);
+
+		//Comment
+		var comp = new THREE.Object3D();
+		comp.position.set(posx, posy, posz);
+		this.trafficLabelRoot.add(comp);
+		var label = new CommentLabel(TrafficData[i].label, comp);
+		this.trafficLabels.push(label);
+	}
+
+
+	// set mappoint attributes value
+	for (var i = 0; i < this.components.traffics.length; i++) {
+		this.trafficAttributes.color.value[i] = new THREE.Color(TrafficData[i].color); // initial mappoint color
+		this.trafficAttributes.size.value[i] = TrafficData[i].size; // initial mappoint size
+	}
+
+
+	// mappoint mesh
+	this.trafficParticles = new THREE.PointCloud(this.trafficGeom, this.trafficShaderMaterial);
+	this.meshComponents.add(this.trafficParticles);
+
+	this.trafficShaderMaterial.needsUpdate = true;
+
+};
+
+MapNetwork.prototype.initFirework = function () {
+	this.fireworkRoot = new THREE.Object3D();
+	this.meshComponents.add(this.fireworkRoot);
+
+	for (var i = 0; i < FireworkData.length; i++) {
+		var posx = FireworkData[i].position.x - 131.5;
+		var posy = FireworkData[i].height;
+		var posz = FireworkData[i].position.y - 70;
+		var pos = new THREE.Vector3(posx, posy, posz);
+
+		var fw = new Firework(this.fireworkRoot, pos, FireworkData[i].size, FireworkData[i].color, FireworkData[i].duration, FireworkData[i].label);
+		this.fireworks.push(fw);
+
+	}
+}
 
 MapNetwork.prototype.update = function (deltaTime) {
 
 	if (!this.initialized) return;
 
+	// update position of traffic labels
+	for (var ii = 0; ii < this.trafficLabels.length; ii++) {
+		this.trafficLabels[ii].updatePosition();
+	}
 
+	// update fireworks 
+	for (var i = 0; i < this.fireworks.length; i++) {
+		this.fireworks[i].update(deltaTime);
+	}
 };
 
 MapNetwork.prototype.constructMapLineArrayBuffer = function (mapLine) {
@@ -292,7 +641,7 @@ MapNetwork.prototype.constructMapLineArrayBuffer = function (mapLine) {
 };
 
 MapNetwork.prototype.releaseSignalAt = function () {
-	
+
 };
 
 // Assets & Loaders --------------------------------------------------------
@@ -341,6 +690,9 @@ shaderLoader.loadMultiple( SHADER_CONTAINER, {
 	maplineVert: 'shaders/mapline.vert',
 	maplineFrag: 'shaders/mapline.frag',
 
+	fireworkVert: 'shaders/firework.vert',
+	fireworkFrag: 'shaders/firework.frag',
+
 } );
 
 
@@ -359,12 +711,24 @@ var textureLoader = new THREE.TextureLoader( loadingManager );
 textureLoader.load( 'sprites/circle.png', function ( tex ) {
 
 	TEXTURES.circle = tex;
-
+	
 } );
 
 textureLoader.load( 'sprites/mark.png', function ( tex ) {
 
 	TEXTURES.mark = tex;
+
+} );
+
+textureLoader.load( 'sprites/spark4.png', function ( tex ) {
+
+	TEXTURES.spark4 = tex;
+
+} );
+
+textureLoader.load( 'sprites/spark5.png', function ( tex ) {
+
+	TEXTURES.spark5 = tex;
 
 } );
 
@@ -388,8 +752,8 @@ var FRAME_COUNT = 0;
 var sceneSettings = {
 
 	pause: false,
-	bgColor: 0x020220,
-	enableGridHelper: false,
+	bgColor: 0x111111,
+	enableGridHelper: true,
 	enableAxisHelper: false
 
 };
@@ -420,11 +784,9 @@ stats = new Stats();
 
 // ---- Camera
 camera = new THREE.PerspectiveCamera(75, screenRatio, 0.1, 1000);
-// camera.position.set(0, 150, 0);
 // camera orbit control
 cameraCtrl = new THREE.OrbitControls(camera, renderer.domElement);
-cameraCtrl.object.position.z = 100;
-cameraCtrl.object.position.x = 100;
+cameraCtrl.object.position.y = 120;
 cameraCtrl.autoRotate = false;
 cameraCtrl.autoRotateSpeed = 1;
 cameraCtrl.enablePan = false;
@@ -433,7 +795,7 @@ cameraCtrl.enableRotate = false;
 
 
 // ---- grid & axis helper
-var gridHelper = new THREE.GridHelper(100, 5);
+var gridHelper = new THREE.GridHelper(131.5, 5);
 gridHelper.setColors(0x00bbff, 0xffffff);
 gridHelper.material.opacity = 0.05;
 gridHelper.material.transparent = true;
@@ -566,5 +928,14 @@ function onWindowResize() {
 }
 
 //Real signal's data
-var DATASET = [
-]
+var TrafficData = [
+    { size: 1.5, position: { x: 100, y: 20 }, height: 0, color: '#ffff00', label: 'A city' },
+    { size: 1, position: { x: 50, y: 50 }, height: 0, color: '#ff0000', label: 'B city' },
+    { size: 1, position: { x: 80, y: 100 }, height: 0, color: '#ff00ff', label: 'C city' },
+];
+
+var FireworkData = [
+    { size: 1, position: { x: 100, y: 20 }, height: 0, duration: 6, color: '#ff00ff', label: 'A firework' },
+    { size: 1.5, position: { x: 50, y: 50 }, height: 0, duration: 5, color: '#ffff00', label: 'B firework' },
+    { size: 2, position: { x: 80, y: 100 }, height: 0, duration: 4, color: '#00ffff', label: 'C firework' },
+];
