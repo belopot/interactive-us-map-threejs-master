@@ -9,7 +9,7 @@ function Firework(parentObj, pos, size, color, duration, label) {
     this.uniforms = {
         sizeMultiplier: {
             type: 'f',
-            value: 5
+            value: 1
         },
         opacity: {
             type: 'f',
@@ -17,7 +17,7 @@ function Firework(parentObj, pos, size, color, duration, label) {
         },
         texture: {
             type: 't',
-            value: TEXTURES.spark5
+            value: TEXTURES.circle
         }
     };
 
@@ -48,15 +48,15 @@ function Firework(parentObj, pos, size, color, duration, label) {
     this.uniformsChild = {
         sizeMultiplier: {
             type: 'f',
-            value: 3
+            value: 1
         },
         opacity: {
             type: 'f',
-            value: 0.8
+            value: 1
         },
         texture: {
             type: 't',
-            value: TEXTURES.spark5
+            value: TEXTURES.circle
         }
     };
 
@@ -92,6 +92,10 @@ function Firework(parentObj, pos, size, color, duration, label) {
     this.size = size;
     this.color = new THREE.Color(color);;
     this.launch();
+
+    this.angle = [];
+    this.speed = [];
+    this.gravity = -0.05;
 };
 Firework.prototype.reset = function () {
     this.parentObj.remove(this.points);
@@ -109,7 +113,8 @@ Firework.prototype.launch = function () {
     this.attributes.color.value = [];
     this.attributes.size.value = [];
     this.attributes.color.value[0] = this.color;
-    this.attributes.size.value[0] = this.size * 3;
+    this.attributes.size.value[0] = this.size;
+    this.materialChild.uniforms.opacity.value = 1;
 
     this.geometry = new THREE.Geometry();
     this.points = new THREE.PointCloud(this.geometry, this.material);
@@ -139,11 +144,17 @@ Firework.prototype.explode = function (vector) {
         );
         this.geometry.vertices.push(from);
         this.dest.push(to);
+
+        var ang = { x: THREE.Math.randFloat(0, 360), y: THREE.Math.randFloat(0, 360), z: THREE.Math.randFloat(0, 360) }
+        this.angle.push(ang);
+
+        var sd = THREE.Math.randFloat(0.01, 0.1);
+        this.speed.push(sd);
     }
 
     for (var i = 0; i < this.geometry.vertices.length; i++) {
         this.attributesChild.color.value[i] = this.color;
-        this.attributesChild.size.value[i] = this.size * 2;
+        this.attributesChild.size.value[i] = this.size;
     }
 
     this.points = new THREE.PointCloud(this.geometry, this.materialChild);
@@ -160,15 +171,16 @@ Firework.prototype.update = function (deltaTime) {
     if (this.points && this.geometry) {
         var total = this.geometry.vertices.length;
 
-        // lerp particle positions 
-        for (var i = 0; i < total; i++) {
-            this.geometry.vertices[i].x += (this.dest[i].x - this.geometry.vertices[i].x) / 60;
-            this.geometry.vertices[i].y += (this.dest[i].y - this.geometry.vertices[i].y) / 60;
-            this.geometry.vertices[i].z += (this.dest[i].z - this.geometry.vertices[i].z) / 60;
-            this.geometry.verticesNeedUpdate = true;
-        }
+
         // watch first particle for explosion 
         if (total === 1) {
+            // lerp particle positions 
+            for (var i = 0; i < total; i++) {
+                this.geometry.vertices[i].y += (this.dest[i].y - this.geometry.vertices[i].y) / 60;
+
+                this.geometry.verticesNeedUpdate = true;
+            }
+
             if (Math.ceil(this.geometry.vertices[0].y) > this.dest[0].y - 2) {
                 this.explode(this.geometry.vertices[0]);
                 return;
@@ -176,8 +188,16 @@ Firework.prototype.update = function (deltaTime) {
         }
         // fade out exploded particles 
         if (total > 1) {
-            this.material.opacity -= 0.015;
-            this.material.colorsNeedUpdate = true;
+            // lerp particle positions 
+            for (var i = 0; i < total; i++) {
+                this.geometry.vertices[i].x += Math.cos(this.angle[i].x) * this.speed[i];
+                this.geometry.vertices[i].y += Math.sin(this.angle[i].y) * this.speed[i] + this.gravity;
+                this.geometry.vertices[i].z += Math.cos(this.angle[i].z) * this.speed[i];
+
+                this.geometry.verticesNeedUpdate = true;
+            }
+
+            this.materialChild.uniforms.opacity.value -= 0.015;
         }
     }
 }
