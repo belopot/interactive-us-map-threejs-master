@@ -5,8 +5,8 @@ function MapNetwork() {
 	this.initialized = false;
 
 	this.settings = {
-		verticesSkipStep: 64,
-		maxLineDist: 3,
+		verticesSkipStep: 256,
+		maxLineDist: 5,
 		maxConnectinosPerPoint: 6,
 	};
 
@@ -20,7 +20,7 @@ function MapNetwork() {
 	};
 
 	// map line
-	this.mapLineOpacityMultiplier = 0.3;
+	this.mapLineOpacityMultiplier = 0.6;
 	this.mapLineColor = '#14d5ff';
 	this.mapLineGeom = new THREE.BufferGeometry();
 	this.mapLinePositions = [];

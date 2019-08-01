@@ -4,7 +4,7 @@ function CommentLabel(label, targetObj) {
   this.div.innerHTML = label;
   this.div.style.top = -1000;
   this.div.style.left = -1000;
-  this.div.style.color = '#aaaaaa';
+  this.div.style.color = '#666666';
   this.div.style.fontSize = '14px';
   this.div.classList.add('comment-label');
   this.parent = targetObj;

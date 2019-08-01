@@ -182,7 +182,7 @@ Firework.prototype.update = function (deltaTime) {
                 this.geometry.verticesNeedUpdate = true;
             }
 
-            if (Math.ceil(this.geometry.vertices[0].y) > this.dest[0].y - 2) {
+            if (Math.ceil(this.geometry.vertices[0].y) > this.dest[0].y - 5) {
                 this.explode(this.geometry.vertices[0]);
                 return;
             }
