@@ -87,7 +87,8 @@ function Firework(parentObj, pos, size, color, duration, label) {
     this.duration = duration;
     this.timer = 0;
     this.position = pos;
-    this.fireHeight = 20;
+    this.fireHeight = 13;
+    this.fireCount = 30;
     this.fireRadius = 5;
     this.size = size;
     this.color = new THREE.Color(color);;
@@ -129,7 +130,7 @@ Firework.prototype.explode = function (vector) {
 
     this.geometry = new THREE.Geometry();
 
-    for (var i = 0; i < 20; i++) {
+    for (var i = 0; i < this.fireCount; i++) {
 
 
         var from = new THREE.Vector3(

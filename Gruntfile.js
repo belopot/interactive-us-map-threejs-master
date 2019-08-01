@@ -1,13 +1,13 @@
-module.exports = function ( grunt ) {
+module.exports = function (grunt) {
 
-	grunt.initConfig( {
+	grunt.initConfig({
 
-		pkg: grunt.file.readJSON( 'package.json' ),
+		pkg: grunt.file.readJSON('package.json'),
 
 		browserify: {
 			build: {
 				files: {
-					'js/build/deploy.js': [ 'js/build/app.js' ]
+					'js/build/deploy.js': ['js/build/app.js']
 				}
 			}
 		},
@@ -17,15 +17,15 @@ module.exports = function ( grunt ) {
 				// footer: ''
 			},
 			build: {
-				src: [ 'js/mappoint.js', 'js/traffic.js', 'js/firework.js', 'js/comment.js', 'js/mapline.js', 'js/mapnet.js',
-						 'js/loaders.js', 'js/scene.js', 'js/main.js', 'js/run.js', 'js/events.js', 'js/dataSetAPI.js' ],
+				src: ['js/dataSetAPI.js', 'js/events.js', 'js/mapline.js', 'js/mappoint.js', 'js/comment.js', 'js/traffic.js', 'js/firework.js',
+					'js/mapnet.js', 'js/scene.js', 'js/run.js', 'js/main.js', 'js/loaders.js'],
 
 				dest: 'js/build/app.js'
 			},
 			vendor: {
-				src: [ 'js/vendor/underscore.js', 'js/vendor/jquery.min.js', 'js/vendor/Detector.js', 'js/vendor/dat.gui.min.js',
-						 'js/vendor/stats.min.js', 'js/vendor/three.js', 'js/vendor/OrbitControls.js', 'js/vendor/OBJLoader.js',
-						'js/vendor/tweenmax.min.js'],
+				src: ['js/vendor/underscore.js', 'js/vendor/jquery.min.js', 'js/vendor/Detector.js', 'js/vendor/dat.gui.min.js',
+					'js/vendor/stats.min.js', 'js/vendor/three.js', 'js/vendor/OrbitControls.js', 'js/vendor/OBJLoader.js',
+					'js/vendor/tweenmax.min.js'],
 
 				dest: 'js/vendor/vendor-merge.js'
 			}
@@ -33,12 +33,12 @@ module.exports = function ( grunt ) {
 		uglify: {
 			options: {},
 			build: {
-				src: [ 'js/build/app.js' ],
+				src: ['js/build/app.js'],
 				dest: 'js/build/app.min.js',
 				sourceMap: true
 			},
 			vendor: {
-				src: [ 'js/vendor/vendor-merge.js' ],
+				src: ['js/vendor/vendor-merge.js'],
 				dest: 'js/vendor/vendor-merge.min.js',
 				sourceMap: false
 			}
@@ -49,7 +49,7 @@ module.exports = function ( grunt ) {
 			},
 			js: {
 				files: 'js/*.js',
-				tasks: [ 'concat' ]
+				tasks: ['concat']
 			},
 			html: {
 				files: '*.html'
@@ -64,18 +64,18 @@ module.exports = function ( grunt ) {
 			}
 		}
 
-	} );
+	});
 
 	// Load the plugin that provides the tasks.
-	grunt.loadNpmTasks( 'grunt-browserify' );
-	grunt.loadNpmTasks( 'grunt-contrib-concat' );
-	grunt.loadNpmTasks( 'grunt-contrib-uglify' );
-	grunt.loadNpmTasks( 'grunt-contrib-watch' );
-	grunt.loadNpmTasks( 'grunt-contrib-connect' );
+	grunt.loadNpmTasks('grunt-browserify');
+	grunt.loadNpmTasks('grunt-contrib-concat');
+	grunt.loadNpmTasks('grunt-contrib-uglify');
+	grunt.loadNpmTasks('grunt-contrib-watch');
+	grunt.loadNpmTasks('grunt-contrib-connect');
 
 	// tasks
-	grunt.registerTask( 'default', [ 'watch' ] );
-	grunt.registerTask( 'serve', [ 'connect:server', 'watch' ] );
-	grunt.registerTask( 'build', [ 'concat:build', 'uglify:build' ] );
-	grunt.registerTask( 'vendor', [ 'concat:vendor', 'uglify:vendor' ] );
+	grunt.registerTask('default', ['watch']);
+	grunt.registerTask('serve', ['connect:server', 'watch']);
+	grunt.registerTask('build', ['concat:build', 'uglify:build']);
+	grunt.registerTask('vendor', ['concat:vendor', 'uglify:vendor']);
 };

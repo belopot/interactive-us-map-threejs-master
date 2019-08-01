@@ -4,8 +4,8 @@ function CommentLabel(label, targetObj) {
   this.div.innerHTML = label;
   this.div.style.top = -1000;
   this.div.style.left = -1000;
-  this.div.style.color = '#ffffff';
-  this.div.style.fontSize = '16px';
+  this.div.style.color = '#aaaaaa';
+  this.div.style.fontSize = '14px';
   this.div.classList.add('comment-label');
   this.parent = targetObj;
   this.position = new THREE.Vector3(0, 0, 0);
@@ -29,7 +29,7 @@ CommentLabel.prototype.updatePosition = function () {
 
   var coords2d = this.get2DCoords();
   this.div.style.left = coords2d.x - this.div.offsetWidth / 2 + 'px';
-  this.div.style.top = coords2d.y - this.div.offsetHeight - 5 + 'px';
+  this.div.style.top = coords2d.y - this.div.offsetHeight + 30 + 'px';
 }
 
 CommentLabel.prototype.get2DCoords = function () {

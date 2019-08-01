@@ -1,11 +1,16 @@
 // Traffic ----------------------------------------------------------------
 
-function Traffic( x, y, z, size, color, label) {
+function Traffic(root, x, y, z, size, color, label) {
 	this.size = size;
 	this.color = color;
-	this.label = label;
-	THREE.Vector3.call( this, x, y, z );
+	var geometry = new THREE.CircleGeometry(this.size, 18);
+	var material = new THREE.MeshBasicMaterial({ color: this.color, side: THREE.DoubleSide});
+	this.component = new THREE.Mesh(geometry, material);
+	this.component.position.set(x, y, z);
+	this.component.rotation.set(-Math.PI / 2, 0, 0);
+	root.add(this.component);
+
+	this.label = new CommentLabel(label, this.component);
 }
 
-Traffic.prototype = Object.create( THREE.Vector3.prototype );
 
