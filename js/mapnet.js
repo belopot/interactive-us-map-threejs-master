@@ -6,7 +6,7 @@ function MapNetwork() {
 
 	this.settings = {
 		verticesSkipStep: 1,
-		maxLineDist: 1.4,
+		maxLineDist: 0.5,
 		maxConnectinosPerPoint: 5,
 	};
 
