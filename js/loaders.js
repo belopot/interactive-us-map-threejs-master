@@ -56,7 +56,6 @@ var OBJloader = new THREE.OBJLoader( loadingManager );
 OBJloader.load( 'models/map_vertex.obj', function ( model ) {
 
 	OBJ_MODELS.usmap = model.children[ 0 ];
-
 } );
 
 

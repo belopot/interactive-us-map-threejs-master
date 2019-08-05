@@ -2,7 +2,7 @@
 /* exported MapLine, Connection */
 
 function MapLine(pointA, pointB) {
-	this.bezierSubdivision = 8;
+	this.bezierSubdivision = 1;
 	this.pointA = pointA;
 	this.pointB = pointB;
 	this.cpLength = pointA.distanceTo(pointB) / THREE.Math.randFloat(1.5, 4.0);

@@ -5,8 +5,8 @@ function MapNetwork() {
 	this.initialized = false;
 
 	this.settings = {
-		verticesSkipStep: 150,
-		maxLineDist: 20,
+		verticesSkipStep: 1,
+		maxLineDist: 1.4,
 		maxConnectinosPerPoint: 5,
 	};
 
@@ -20,8 +20,8 @@ function MapNetwork() {
 	};
 
 	// map line
-	this.mapLineOpacityMultiplier = 0.5;
-	this.mapLineColor = '#14d5ff';
+	this.mapLineOpacityMultiplier = 0.3;
+	this.mapLineColor = '#d514ff';
 	this.mapLineGeom = new THREE.BufferGeometry();
 	this.mapLinePositions = [];
 	this.mapLineIndices = [];
@@ -46,7 +46,7 @@ function MapNetwork() {
 	};
 
 	// mappoint
-	this.mapPointSizeMultiplier = 0.2;
+	this.mapPointSizeMultiplier = 0.3;
 	this.spriteTextureMapPoint = TEXTURES.circle;
 	this.mapPointColor = '#ffffff';
 	this.mapPointOpacity = 0.3;
@@ -135,7 +135,8 @@ MapNetwork.prototype.initMapPoints = function (inputVertices) {
 	// set mappoint attributes value
 	for (var i = 0; i < this.components.mapPoints.length; i++) {
 		this.mapPointAttributes.color.value[i] = new THREE.Color('#ffffff'); // initial mappoint color
-		this.mapPointAttributes.size.value[i] = THREE.Math.randFloat(0.75, 3.0); // initial mappoint size
+		// this.mapPointAttributes.size.value[i] = THREE.Math.randFloat(0.75, 3.0); // initial mappoint size
+		this.mapPointAttributes.size.value[i] = this.mapPointSizeMultiplier;
 	}
 
 
@@ -155,7 +156,9 @@ MapNetwork.prototype.initMapLines = function () {
 		for (var k = j + 1; k < allMapPointsLength; k++) {
 			var n2 = this.components.mapPoints[k];
 			// connect mappoint if distance is within threshold and limit maximum connection per mappoint
-			if (n1 !== n2 && n1.distanceTo(n2) < this.settings.maxLineDist &&
+			var sV = new THREE.Vector3(n1.x, 0, n1.z);
+			var eV = new THREE.Vector3(n2.x, 0, n2.z);
+			if (n1 !== n2 && sV.distanceTo(eV) < this.settings.maxLineDist &&
 				n1.connection.length < this.settings.maxConnectinosPerPoint &&
 				n2.connection.length < this.settings.maxConnectinosPerPoint) {
 				var connectedMapLine = n1.connectPointTo(n2);
@@ -251,8 +254,8 @@ MapNetwork.prototype.constructMapLineArrayBuffer = function (mapLine) {
 			var idx = this.mapLineNextPositionsIndex;
 			this.mapLineIndices.push(idx, idx + 1);
 
-			var opacity = THREE.Math.randFloat(0.005, 0.2);
-			this.mapLineAttributes.opacity.value.push(opacity, opacity);
+			// var opacity = THREE.Math.randFloat(0.005, 0.2);
+			this.mapLineAttributes.opacity.value.push(this.mapLineOpacityMultiplier, this.mapLineOpacityMultiplier);
 
 		}
 
